@@ -157,3 +157,11 @@ ingestion-pipeline:
     bucket_name: documents
     endpoint_url: http://minio:9000
     region: us-east-1
+
+
+llm-service:
+  enabled: true
+
+
+llm-service-hpu:
+  enabled: false

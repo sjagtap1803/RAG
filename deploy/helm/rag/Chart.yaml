@@ -18,6 +18,11 @@ dependencies:
   - name: llm-service
     version: 0.1.0
     repository: https://rh-ai-kickstart.github.io/ai-architecture-charts
+    condition: llm-service.enabled
+  - name: llm-service-hpu
+    version: 0.1.0
+    repository: https://rh-ai-kickstart.github.io/ai-architecture-charts
+    condition: llm-service-hpu.enabled
   - name: configure-pipeline
     version: 0.1.0
     repository: https://rh-ai-kickstart.github.io/ai-architecture-charts
