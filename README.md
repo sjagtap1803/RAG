@@ -28,7 +28,7 @@ Retrieval-Augmented Generation (RAG) enhances Large Language Models (LLMs) by re
 - Vector Store Integration to store dense embeddings
 - Integrates with LLMs to generate responses based on retrieved documents
 - Streamlit based web application
-- Runs on OpenShift AI for container orchestration and GPU acceleration
+- Runs on OpenShift AI for container orchestration and GPU/HPU acceleration
 - Llama Stack to standardize the core building blocks and simplify AI application development
 - Safety Guardrail to block harmful request / response
 - Integration with MCP servers
@@ -64,7 +64,7 @@ Enterprise documents are pre-processed and ingested into the system for later qu
 ## Scalability & Performance
 
 - KServe for auto-scaling the model and embedding pods
-- GPU-based inference optimized using node selectors
+- GPU/HPU-based inference optimized using node selectors
 - Horizontal scaling of ingestion and retrieval components
 
 ---
@@ -84,6 +84,8 @@ The kickstart supports two modes of deployments
 - [huggingface-cli](https://huggingface.co/docs/huggingface_hub/guides/cli) (optional)
 - 1 GPU with 24GB of VRAM for the LLM, refer to the chart below
 - 1 GPU with 24GB of VRAM for the safety/shield model (optional)
+- 1 HPU for the LLM, only applicable to HPU clusters
+- 1 HPU for the safety/shield model, only applicable to HPU clusters (optional)
 - [Hugging Face Token](https://huggingface.co/settings/tokens)
 - Access to [Meta Llama](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct/) model.
 - Access to [Meta Llama Guard](https://huggingface.co/meta-llama/Llama-Guard-3-8B/) model.
@@ -99,7 +101,9 @@ The kickstart supports two modes of deployments
 | Generation  | `meta-llama/Meta-Llama-3-70B-Instruct` | A100 x2     | p4d.24xlarge
 | Safety      | `meta-llama/Llama-Guard-3-8B`          | L4          | g6.2xlarge
 
-Note: the 70B model is NOT required for initial testing of this example.  The safety/shield model `Llama-Guard-3-8B` is also optional. 
+Note: the 70B model is NOT required for initial testing of this example.  The safety/shield model `Llama-Guard-3-8B` is also optional.
+
+HPU Support: All `Generation` and `Safety` models mentioned in the above table are supported.
 
 ---
 
@@ -140,6 +144,10 @@ The output of the command may be something like below
 
 You can work with your OpenShift cluster admin team to determine what labels and taints identify GPU-enabled worker nodes.  It is also possible that all your worker nodes have GPUs therefore have no distinguishing taint.
 
+HPU Instructions:
+
+There are no default taints defined for the HPU nodes.
+
 4. Navigate to Helm deploy directory
 
 ```bash
@@ -166,6 +174,14 @@ model: llama-guard-3-8b (meta-llama/Llama-Guard-3-8B)
 ```
 
 The "guard" models can be used to test shields for profanity, hate speech, violence, etc.
+
+HPU Instructions: 
+
+Run the following command for listing models in an HPU cluster.
+
+```bash
+make list-models DEVICE=hpu
+```
 
 6. Install via make
 
@@ -194,6 +210,28 @@ make install NAMESPACE=llama-stack-rag LLM=llama-3-2-3b-instruct SAFETY=llama-gu
 When prompted, enter your **[Hugging Face Token]((https://huggingface.co/settings/tokens))**.
 
 Note: This process may take 10 to 30 minutes depending on the number and size of models to be downloaded. 
+
+HPU Instructions:
+
+HPU nodes are not tainted by default.
+
+To install only the RAG example, no shields, use the following command:
+
+```bash
+make install NAMESPACE=llama-stack-rag LLM=llama-3-2-3b-instruct DEVICE=hpu
+```
+
+To install both the RAG example as well as the guard model to allow for shields, use the following command:
+
+```bash
+make install NAMESPACE=llama-stack-rag LLM=llama-3-2-3b-instruct SAFETY=llama-guard-3-8b DEVICE=hpu
+```
+
+If you have tainted nodes, then you can use the following command.
+
+```bash
+make install NAMESPACE=llama-stack-rag LLM=llama-3-2-3b-instruct SAFETY=llama-guard-3-8b DEVICE=hpu LLM_TOLERATION="<your_taint_key>" SAFETY_TOLERATION="<your_taint_key>"
+```
 
 7. Watch/Monitor
 
@@ -339,7 +377,7 @@ To add another model follow these steps:
           - "14336"
     ```
 
-  Note: Make sure you have permission to download the models from Huggingface and enough GPUs to support all the models you have requested.  Also **max-model-len** uses additional VRAM therefore you have to scale that parameter to fit your hardware. 
+  Note: Make sure you have permission to download the models from Huggingface and enough GPUs to support all the models you have requested.  Also **max-model-len** uses additional VRAM therefore you have to scale that parameter to fit your hardware. Make sure to specify the correct tolerations (if applicable) for tainted nodes.
 
 2. Run the **make** command again to update the project
 
