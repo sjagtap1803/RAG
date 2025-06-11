@@ -57,6 +57,16 @@ helm_llm_service_args = \
     $(if $(SAFETY_TOLERATION),--set-json global.models.$(SAFETY).tolerations='$(call TOLERATIONS_TEMPLATE,$(SAFETY_TOLERATION))',) \
     $(if $(RAW_DEPLOYMENT),--set llm-service.rawDeploymentMode=$(RAW_DEPLOYMENT),)
 
+helm_llm_service_hpu_args = \
+	--set llm-service-hpu.enabled=true \
+	--set llm-service.enabled=false \
+	--set llm-service-hpu.secret.hf_token=$(HF_TOKEN) \
+	$(if $(LLM),--set global.models.$(LLM).enabled=true,) \
+	$(if $(SAFETY),--set global.models.$(SAFETY).enabled=true,) \
+	$(if $(LLM_TOLERATION),--set-json global.models.$(LLM).tolerations='$(call TOLERATIONS_TEMPLATE,$(LLM_TOLERATION))',) \
+	$(if $(SAFETY_TOLERATION),--set-json global.models.$(SAFETY).tolerations='$(call TOLERATIONS_TEMPLATE,$(SAFETY_TOLERATION))',) \
+	$(if $(RAW_DEPLOYMENT),--set llm-service-hpu.rawDeploymentMode=$(RAW_DEPLOYMENT),)
+
 helm_llama_stack_args = \
     $(if $(LLM),--set global.models.$(LLM).enabled=true,) \
     $(if $(SAFETY),--set global.models.$(SAFETY).enabled=true,) \
@@ -87,7 +97,7 @@ help:
 	@echo "Configuration options (set via environment variables or make arguments):"
 	@echo "  NAMESPACE                - Target namespace (default: llama-stack-rag)"
 	@echo "  HF_TOKEN                 - Hugging Face Token (will prompt if not provided)"
-	@echo "  DEVICE                	  - Deploy models on cpu or gpu (default)"
+	@echo "  DEVICE                	  - Deploy models on cpu, gpu (default) or hpu"
 	@echo "  {SAFETY,LLM}             - Model id as defined in values (eg. llama-3-2-1b-instruct)"
 	@echo "  {SAFETY,LLM}_URL         - Model URL"
 	@echo "  {SAFETY,LLM}_API_TOKEN   - Model API token for remote models"
@@ -109,13 +119,23 @@ depend:
 
 .PHONY: list-models
 list-models: depend
-	@helm template dummy-release $(RAG_CHART) --set llm-service._debugListModels=true | grep ^model:
+	@if [ "$(DEVICE)" = "hpu" ]; then \
+		helm template dummy-release $(RAG_CHART) --set llm-service.enabled=false --set llm-service-hpu.enabled=true --set llm-service-hpu._debugListModels=true | grep ^model:; \
+	else \
+		helm template dummy-release $(RAG_CHART) --set llm-service._debugListModels=true | grep ^model:; \
+	fi
 
 .PHONY: install
 install: namespace depend delete-jobs
 	@$(eval PGVECTOR_ARGS := $(call helm_pgvector_args))
 	@$(eval MINIO_ARGS := $(call helm_minio_args))
-	@$(eval LLM_SERVICE_ARGS := $(call helm_llm_service_args))
+
+	@if [ "$(DEVICE)" = "hpu" ]; then \
+		$(eval LLM_SERVICE_ARGS := $(call helm_llm_service_hpu_args)); \
+	else \
+		$(eval LLM_SERVICE_ARGS := $(call helm_llm_service_args)); \
+	fi
+
 	@$(eval LLAMA_STACK_ARGS := $(call helm_llama_stack_args))
 	@$(eval INGESTION_ARGS := $(call helm_ingestion_args))
 	@echo "Installing $(RAG_CHART) helm chart"
