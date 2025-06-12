@@ -114,8 +114,8 @@ This reference architecture can be deployed in OpenShift with the following pod 
 
 4. **LLM Service Pod(s)**
    - Runs the language model inference (e.g., vLLM with Llama models)
-   - Optimized for GPU utilization
-   - Potentially runs on specialized nodes with GPU resources
+   - Optimized for GPU/HPU utilization
+   - Potentially runs on specialized nodes with GPU/HPU resources
    - May be run locally through vLLM (to be confirmed)
 
 5. **Vector Database Pod(s)**
