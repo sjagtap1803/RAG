@@ -23,6 +23,8 @@ Retrieval-Augmented Generation (RAG) enhances Large Language Models (LLMs) by re
 
 ## Features
 
+Note: Intel® Gaudi® AI Accelerators are referred to as "HPU" in the documentation.
+
 - Multi-Modal Data Ingestion for ingesting unstructured data
 - Preprocessing pipelines for cleaning, chunking, and embedding generation using language models
 - Vector Store Integration to store dense embeddings
@@ -82,10 +84,8 @@ The kickstart supports two modes of deployments
 - OpenShift Client CLI - [oc](https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/cli_tools/openshift-cli-oc#installing-openshift-cli)
 - Helm CLI - helm
 - [huggingface-cli](https://huggingface.co/docs/huggingface_hub/guides/cli) (optional)
-- 1 GPU with 24GB of VRAM for the LLM, refer to the chart below
-- 1 GPU with 24GB of VRAM for the safety/shield model (optional)
-- 1 HPU for the LLM, only applicable to HPU clusters
-- 1 HPU for the safety/shield model, only applicable to HPU clusters (optional)
+- 1 GPU/HPU with atleast 24GB of VRAM for the LLM, refer to the chart below
+- 1 GPU/HPU with atleast 24GB of VRAM for the safety/shield model (optional)
 - [Hugging Face Token](https://huggingface.co/settings/tokens)
 - Access to [Meta Llama](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct/) model.
 - Access to [Meta Llama Guard](https://huggingface.co/meta-llama/Llama-Guard-3-8B/) model.
